@@ -1,28 +1,29 @@
-from fastapi import FastAPI
-
-from src.model.item import Item
-from src.model.receipt import Receipt
+import uuid
+from fastapi import FastAPI, HTTPException
+from src.model.receipt_model import ReceiptModel
 from src.points import Points
 import uvicorn
 
-app = FastAPI()
+api = FastAPI()
+pointsInstance = Points()
 
-points = Points()
 
-@app.get("/")
-async def test():
-    # receipt = Receipt("Target", "2022-01-01", "13:01",
-    #                   [Item("Mountain Dew 12PK", "6.49"), Item("Emils Cheese Pizza", "12.25"),
-    #                    Item("Knorr Creamy Chicken", "1.26"), Item("Doritos Nacho Cheese", "3.35"), Item("   Klarbrunn 12-PK 12 FL OZ  ", "12.00")],
-    #                   "35.35")
+@api.get("/receipts/{request_id}/points")
+async def get(request_id: uuid.UUID):
+    response = Points.calculatePoints(pointsInstance, Points.read_receipt(pointsInstance, request_id))
+    if response is None:
+        raise HTTPException(status_code=404, detail="No receipt found for that ID.")
 
-    receipt = Receipt("M&M Corner Market", "2022-03-20", "14:33", [Item("Gatorade", "2.25"),
-                                                                   Item("Gatorade", "2.25"), Item("Gatorade", "2.25"), Item("Gatorade", "2.25")], "9.00")
-    return {"message": Points.calculatePoints(points, receipt)}
+    return response
 
-@app.post("/receipts/process")
-async def process_receipt(receipt: Receipt):
+
+@api.post("/receipts/process")
+async def post(request: ReceiptModel):
+    response = pointsInstance.createReceipt(request)
+    if response is None:
+        raise HTTPException(status_code=422, detail="Invalid request.")
+    return response
 
 
 if __name__ == '__main__':
-    uvicorn.run(app, port=8000)
+    uvicorn.run(api, port=8000)

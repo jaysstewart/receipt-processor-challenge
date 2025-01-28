@@ -10,3 +10,4 @@ class Receipt:
         self.purchaseTime = purchaseTime
         self.items = items
         self.total = total
+        self.points = None

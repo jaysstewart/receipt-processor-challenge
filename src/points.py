@@ -1,13 +1,53 @@
 import math
 from datetime import datetime
 
-class Points:
+from src.model.item import Item
+from src.model.receipt import Receipt
 
+
+class Points:
 
     def __init__(self):
         self.memory = {}
 
+    def write_receipt(self, receipt):
+        self.memory[receipt.id] = receipt
+        return receipt.id
+
+    def read_receipt(self, receipt_id):
+        try:
+            return self.memory[receipt_id]
+        except KeyError:
+            return None
+
+    def createReceipt(self, request):
+        try:
+            # make items
+            items = []
+            for item in items:
+                items.append(Item(item.shortDescription, item.price))
+
+            # make receipt
+            receipt = Receipt(
+                request.retailer,
+                request.purchaseDate,
+                request.purchaseTime,
+                items,
+                request.total
+            )
+
+            # write receipt to memory
+            self.write_receipt(receipt)
+
+            return receipt.id
+        except Exception as e:
+            return e
+
     def calculatePoints(self, receipt):
+
+        if self.memory[receipt.id].points is not None:
+            return self.memory[receipt.id].points
+
         points = 0
         points += self.alphanumericCharactersRule(receipt)
         points += self.roundDollarRule(receipt)
@@ -16,6 +56,8 @@ class Points:
         points += self.trimmedItemDescriptionRule(receipt)
         points += self.oddPurchaseDateRule(receipt)
         points += self.timeOfPurchaseRule(receipt)
+        receipt.points = points
+
         return points
 
     def alphanumericCharactersRule(self, receipt):
